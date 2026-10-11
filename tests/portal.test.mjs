@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {businessInput,taskInput,passwordMatches,connectionReady,mayOpenWorkspace, missingPilotTasks, pilotTasks} from '../portal-model.mjs';
+import {businessInput,taskInput,passwordMatches,connectionReady,mayOpenWorkspace, missingPilotTasks, pilotTasks, templateBrief, validShortlist, taskExists, friendlyError, taskCsv} from '../portal-model.mjs';
 test('account configuration fails closed until a hosted provider is connected',()=>{
  assert.equal(connectionReady({supabaseUrl:'',publishableKey:''}),false);
  assert.equal(connectionReady({supabaseUrl:'http://fake.supabase.co',publishableKey:'sb_publishable_test'}),false);
@@ -41,4 +41,28 @@ test('pilot plan is independent per venture and preserves completed tasks on rep
  assert.deepEqual(missingPilotTasks(existing.slice(0,2)),pilotTasks.slice(2));
  assert.equal(missingPilotTasks([{title:'My unrelated task',done:false}]).length,6);
  assert.ok(pilotTasks.every(title=>title.length<=300));
+});
+
+test('templates never invent content for an unknown venture',()=>{
+ assert.equal(templateBrief('BestPlaced').milestone.includes('prototype'),true);
+ assert.deepEqual(templateBrief('Unknown'),{purpose:'',audience:'',offer:'',milestone:''});
+ const a=templateBrief('AI Agent');a.purpose='Changed';assert.notEqual(templateBrief('AI Agent').purpose,'Changed');
+});
+test('shortlist handoff accepts only distinct known catalogue services',()=>{
+ assert.deepEqual(validShortlist('["Research","Research","Unknown",42]', ['Research']),['Research']);
+ for(const raw of ['bad json','{}','null'])assert.deepEqual(validShortlist(raw,['Research']),[]);
+});
+test('task duplicate guard normalises case and whitespace',()=>{
+ assert.equal(taskExists('  Interview Customers ',[{title:'interview customers'}]),true);
+ assert.equal(taskExists('Deliver pilot',[{title:'interview customers'}]),false);
+});
+test('CSV escapes quotes, newlines and spreadsheet formula prefixes',()=>{
+ const csv=taskCsv([{title:'=1+1',done:false},{title:'A "quote", and\nline',done:true}]);
+ assert.ok(csv.includes('"\'=1+1"'));assert.ok(csv.includes('"A ""quote"", and\nline"'));
+ assert.ok(taskCsv([{title:'  @SUM(1)',done:false}]).includes("'  @SUM(1)"));
+});
+test('errors describe account and network actions without raw security details',()=>{
+ assert.match(friendlyError({message:'Failed to fetch'}),/internet connection/);
+ assert.match(friendlyError({message:'Invalid login credentials'}),/reset your password/);
+ assert.doesNotMatch(friendlyError({message:'row-level security policy violated'}),/row-level/);
 });

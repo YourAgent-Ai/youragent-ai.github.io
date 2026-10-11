@@ -10,7 +10,7 @@ test('client page entries select only implemented workspace views',()=>{
  const panels=new Set([...html.matchAll(/data-panel="([^"]+)"/g)].map(x=>x[1]));assert.deepEqual(views,panels);
  for(const file of readdirSync(root).filter(x=>x.endsWith('.html'))){
   const text=readFileSync(new URL(file,root),'utf8');
-  for(const x of text.matchAll(/portal\.html\?view=([^"<]+)/g))assert.ok(views.has(x[1]),file);
+  for(const x of text.matchAll(/portal\.html\?view=([a-z-]+)/g))assert.ok(views.has(x[1]),file);
  }
 });
 test('every static DOM lookup resolves to a unique element',()=>{
@@ -49,4 +49,16 @@ test('public files do not publish a personal contact or executable paid feature'
  for(const file of readdirSync(root).filter(x=>/\.(html|js|mjs)$/.test(x))){const text=readFileSync(new URL(file,root),'utf8');assert.doesNotMatch(text,/[\w.+-]+@gmail\.com/i);}
  assert.match(js,/createSignedUrl\(d.path,60\)/);
  assert.match(html,/No paid subscription, AI usage or payment collection is active/);
+});
+
+test('direct preview initialisation avoids the busy-click guard',()=>{
+ assert.match(js,/if\(new URLSearchParams\(location.search\).get\('preview'\)==='1'\)\{await startPreview\(\);return;\}/);
+ assert.match(js,/async function startPreview\(\)\{demo=true;samples.clear\(\)/);
+ assert.match(js,/\$\('demo'\).onclick=\(\)=>run\(startPreview/);
+});
+test('new task controls constrain changes to the selected venture',()=>{
+ assert.match(js,/update\(\{title\}\).eq\('id',t.id\).eq\('business_id',b.id\).select\('id'\).single\(\)/);
+ assert.match(js,/delete\(\).eq\('id',t.id\).eq\('business_id',b.id\).select\('id'\).single\(\)/);
+ assert.match(js,/window.confirm\('Delete this task/);
+ assert.match(js,/window.addEventListener\('beforeunload'/);
 });

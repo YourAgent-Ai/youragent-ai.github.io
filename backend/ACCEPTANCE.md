@@ -17,3 +17,15 @@ Complete these after migrations and provider configuration. Never run checks aga
 - Verify all reports match saved data and exports exclude passwords, MFA keys, session tokens and document object paths.
 - Verify AI/billing/integration pages do not invoke paid APIs or collect payment.
 - Finish business contact, privacy terms, deletion support and retention before accepting real clients.
+
+## Expanded workspace checks
+
+- Create AI Agent, BestPlaced and a custom venture; confirm template text is editable and custom briefs stay blank.
+- Carry selected catalogue services into the portal; apply and save them to the selected venture only.
+- Edit, complete and delete a task; check a second account cannot access it.
+- Re-add the pilot plan and confirm existing tasks and completed states are retained.
+- Export JSON and CSV; verify the selected venture only, with no credentials or signed file URLs.
+- Attempt navigation/reload with unfinished fields and check the warning.
+- Verify preview reset affects only tab-memory samples.
+- Test keyboard navigation, visible focus, mobile controls and password show/hide.
+- Verify password recovery, real two-account isolation and uploads against the deployed backend; local tests do not establish these.

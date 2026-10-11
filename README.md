@@ -46,3 +46,11 @@ Use a server endpoint for jobs, credentials, ownership and MFA checks, approvals
 ## Checks
 
 Run `node --check portal.js` and `node --test tests/*.test.mjs` from this directory. Local tests cover inputs, gates, navigation and draft protection; they do not prove the live database or email service is configured. See the real-account acceptance checklist.
+
+## Development update — 12 October 2026
+
+Public navigation, a getting-started guide, starting briefs, a service-shortlist handoff, direct sample preview, setup checklist, task editing/deletion, duplicate checks, understandable errors, draft exit protection, preview reset, CSV tasks, report context, password visibility and accessible controls are implemented.
+
+The shortlist handoff stores service names only in this tab's session storage. Applying it changes the form; saving it is a separate action. Preview remains memory-only and resets on reload. CSV prefixes spreadsheet formulas and escapes quoted fields.
+
+Live account activation remains pending: connect the owner’s Supabase project, apply the two setup migrations once, set public connection configuration, configure production email/auth redirects and complete two-account MFA and upload acceptance checks. AI execution, external integration execution, payments and operator messaging remain unconnected.
