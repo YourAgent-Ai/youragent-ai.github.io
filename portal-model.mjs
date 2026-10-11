@@ -19,3 +19,16 @@ export function connectionReady(config) {
 }
 export function mayOpenWorkspace(aal) { return aal === 'aal2'; }
 
+
+export const pilotTasks = Object.freeze([
+  'Week 1: Define one customer, their problem and one offer.',
+  'Week 2: Speak with potential customers and record their feedback.',
+  'Week 3: Build the smallest usable pilot for the agreed outcome.',
+  'Week 4: Demonstrate the pilot and record willingness to pay.',
+  'Week 5: Deliver a scoped trial and record time, costs and results.',
+  'Week 6: Review the evidence and choose to continue, change or pause.'
+]);
+export function missingPilotTasks(existing = []) {
+  const titles = new Set(existing.map(task => task.title));
+  return pilotTasks.filter(title => !titles.has(title));
+}

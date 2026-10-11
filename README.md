@@ -12,7 +12,7 @@ Each client entry opens the shared `portal.html` with its selected view. Real ac
 
 ## Working features after backend activation
 
-One account with multiple ventures; editable briefs and milestones; tasks and completion; service shortlists; project, request and integration-requirement records with editable statuses; private uploads and one-minute signed download links; reports derived from actual records; JSON export; change activity; password recovery; backup authenticator.
+One account with multiple ventures; a per-venture six-week pilot plan with repeat-click protection and completion progress; editable briefs and milestones; tasks and completion; service shortlists; project, request and integration-requirement records with editable statuses; private uploads and one-minute signed download links; reports derived from actual records; JSON export; change activity; password recovery; backup authenticator.
 
 The preview is explicit, unauthenticated and tab-memory only. It resets on reload. Selecting a file records its filename without uploading bytes. No real client data should be entered into the preview.
 

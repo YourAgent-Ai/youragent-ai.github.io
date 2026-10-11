@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {businessInput,taskInput,passwordMatches,connectionReady,mayOpenWorkspace} from '../portal-model.mjs';
+import {businessInput,taskInput,passwordMatches,connectionReady,mayOpenWorkspace, missingPilotTasks, pilotTasks} from '../portal-model.mjs';
 test('account configuration fails closed until a hosted provider is connected',()=>{
  assert.equal(connectionReady({supabaseUrl:'',publishableKey:''}),false);
  assert.equal(connectionReady({supabaseUrl:'http://fake.supabase.co',publishableKey:'sb_publishable_test'}),false);
@@ -32,3 +32,13 @@ test('database migration protects every table with ownership and MFA; audit is r
  assert.match(sql,/Workspace identity cannot change/);assert.match(sql,/Task identity cannot change/);
 });
 
+
+test('pilot plan is independent per venture and preserves completed tasks on repeat',()=>{
+ assert.equal(pilotTasks.length,6);
+ assert.equal(missingPilotTasks([]).length,6);
+ const existing=pilotTasks.map(title=>({title,done:true}));
+ assert.deepEqual(missingPilotTasks(existing),[]);
+ assert.deepEqual(missingPilotTasks(existing.slice(0,2)),pilotTasks.slice(2));
+ assert.equal(missingPilotTasks([{title:'My unrelated task',done:false}]).length,6);
+ assert.ok(pilotTasks.every(title=>title.length<=300));
+});

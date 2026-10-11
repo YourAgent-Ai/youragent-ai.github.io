@@ -1,4 +1,4 @@
-import {businessInput, taskInput, passwordMatches, connectionReady, mayOpenWorkspace} from './portal-model.mjs';
+import {businessInput, taskInput, passwordMatches, connectionReady, mayOpenWorkspace, missingPilotTasks, pilotTasks} from './portal-model.mjs';
 const $ = id => document.getElementById(id);
 let client, user, mode = 'register', demo = false, businesses = [], tasks = [], activity = [], selected, factorId, recovering = false, routing = false, busy = false;
 const samples = new Map();
@@ -70,6 +70,9 @@ async function render(){
   document.querySelectorAll('#service-options input').forEach(c=>c.checked=b.services.includes(c.value));
   $('activity-list').replaceChildren();activity.forEach(a=>$('activity-list').append(element('li',new Date(a.created_at).toLocaleString()+' · '+a.message)));if(!activity.length)$('activity-list').append(element('li','No changes recorded yet.'));
   renderExtensions(b);
+  const planned=tasks.filter(t=>pilotTasks.includes(t.title));
+  $('pilot-progress').textContent=planned.length?planned.filter(t=>t.done).length+' of '+planned.length+' pilot tasks completed. Review actual customer feedback alongside task completion.':'No pilot plan added yet.';
+  $('add-pilot-plan').disabled=missingPilotTasks(tasks).length===0;
   $('sync-state').textContent=demo?'Preview · not saved to an account':'Saved data loaded · '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' · refresh for changes made elsewhere';
 }
 $('brief-form').onsubmit=e=>{e.preventDefault();run(async()=>{const b=businesses.find(x=>x.id===selected),change={};['purpose','audience','offer','milestone'].forEach(k=>change[k]=$(k).value.trim());change.stage=$('edit-stage').value;if(demo){Object.assign(b,change);record(b,'Business brief updated');}else Object.assign(b,unwrap(await client.from('agency_businesses').update(change).eq('id',b.id).select().single()));await render();status('Brief saved.');},e.submitter);};
@@ -128,3 +131,25 @@ $('document-form').onsubmit=e=>{e.preventDefault();run(async()=>{
 },e.submitter);};
 $('export-report').onclick=()=>{const b=businesses.find(x=>x.id===selected);const blob=new Blob([JSON.stringify({business:{name:b.name,stage:b.stage,purpose:b.purpose,audience:b.audience,offer:b.offer,milestone:b.milestone,services:b.services},tasks:tasks.map(t=>({title:t.title,done:t.done})),records:records.map(r=>({kind:r.kind,title:r.title,details:r.details,status:r.status})),documents:documents.map(d=>({name:d.name,size:d.size})),generatedAt:new Date().toISOString(),preview:demo},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='agency-workspace-report.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('settings-reset').onclick=()=>run(async()=>{if(demo)throw Error('Password reset is available after creating a real account.');unwrap(await client.auth.resetPasswordForEmail(user.email,{redirectTo:location.origin+location.pathname}));status('Password reset email requested. Check your inbox.');},$('settings-reset'));
+
+$('open-pilot-tasks').onclick=()=>selectView('tasks');
+$('open-pilot-brief').onclick=()=>selectView('brief');
+$('add-pilot-plan').onclick=()=>run(async()=>{
+  ensureSaved();
+  const b=businesses.find(x=>x.id===selected);
+  if(!b)throw Error('Create or select a venture first.');
+  if(!demo){
+    // Reload task titles so a repeated click or a completed refresh does not duplicate the plan.
+    tasks=unwrap(await client.from('agency_tasks').select('*').eq('business_id',b.id).order('created_at'));
+  }
+  const missing=missingPilotTasks(tasks);
+  if(!missing.length){await render();status('This venture already has the full pilot plan.');return;}
+  if(demo){
+    sample(b).tasks.push(...missing.map(title=>({id:crypto.randomUUID(),title,done:false})));
+    record(b,'Six-week pilot plan added');
+  }else{
+    unwrap(await client.from('agency_tasks').insert(missing.map(title=>({business_id:b.id,title}))));
+  }
+  await render();selectView('tasks');
+  status(demo?'Pilot plan added to this preview tab. It resets on reload.':'Pilot plan saved to this venture.');
+},$('add-pilot-plan'));
